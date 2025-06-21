@@ -1,0 +1,8 @@
+# OpenAI API Key
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Galileo Configuration (use existing project)
+GALILEO_API_KEY=your_galileo_api_key_here
+GALILEO_PROJECT=patient_query_bot
+GALILEO_LOG_STREAM=patient-chatbot-interactions
+GALILEO_CONSOLE_URL=https://console-galileo-v2-dev.gcp-dev.galileo.ai
