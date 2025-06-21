@@ -52,7 +52,7 @@ def get_rag_response(query: str, namespace: str, top_k: int) -> Optional[RagResp
         logger_debug.info(f"Making RAG request - Query: {query}, Namespace: {namespace}, Top K: {top_k}")
         
         # Get embeddings for the query
-        logger_debug.info("Getting embeddings for query")
+        logger_debug.info("Getting embeddings for user query")
         embedding_response = openai_client.embeddings.create(
             model="text-embedding-3-small",
             input=query
