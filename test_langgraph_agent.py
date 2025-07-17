@@ -197,8 +197,11 @@ def test_individual_components():
     
     for query in rag_test_queries:
         print(f"\n   Query: {query}")
-        response = rag_tool._run(query)
+        result = rag_tool._run(query)
+        response = result["response"]
+        documents = result["documents"]
         print(f"   Response: {response[:100]}...")
+        print(f"   Documents retrieved: {len(documents)}")
     
     # Test Claim Approval Tool
     print("\n2. Testing Claim Approval Tool...")

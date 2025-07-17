@@ -111,12 +111,20 @@ class IntentClassifier:
             chain = prompt | self.llm
             response = chain.invoke({})
             
+            print(f"🔍 LLM Intent Classification Debug:")
+            print(f"   Input: {user_input}")
+            print(f"   Raw LLM Response: {response.content}")
+            
             # Parse JSON response
             import json
             result = json.loads(response.content)
+            
+            print(f"   Parsed Result: {result}")
+            
             return result
         except Exception as e:
-            print(f"Error in LLM classification: {e}")
+            print(f"❌ Error in LLM classification: {e}")
+            print(f"   Raw response was: {response.content if 'response' in locals() else 'No response'}")
             return {
                 "intent_type": "unknown",
                 "confidence": 0.0,
@@ -128,6 +136,12 @@ class IntentClassifier:
         """Combine keyword scores and LLM results for final classification."""
         llm_intent = llm_result.get("intent_type", "unknown")
         llm_confidence = llm_result.get("confidence", 0.0)
+        
+        print(f"🔍 Intent Combination Debug:")
+        print(f"   QA Score: {qa_score:.3f}")
+        print(f"   Claim Score: {claim_score:.3f}")
+        print(f"   LLM Intent: {llm_intent}")
+        print(f"   LLM Confidence: {llm_confidence:.3f}")
         
         # Weight the results (LLM gets higher weight)
         llm_weight = 0.7
@@ -142,6 +156,8 @@ class IntentClassifier:
             combined_confidence = (llm_confidence * llm_weight) + (max(qa_score, claim_score) * keyword_weight)
         else:
             combined_confidence = max(qa_score, claim_score)
+        
+        print(f"   Combined Confidence: {combined_confidence:.3f}")
         
         # Determine final intent
         if combined_confidence < 0.3:
@@ -158,6 +174,9 @@ class IntentClassifier:
                 final_intent = "both"
             else:
                 final_intent = "unknown"
+        
+        print(f"   Final Intent: {final_intent}")
+        print(f"   Final Confidence: {combined_confidence:.3f}")
         
         return IntentResult(
             intent_type=final_intent,

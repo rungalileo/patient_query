@@ -201,7 +201,6 @@ class ClaimApprovalTool:
              diagnosis: str, age: int, insurance_type: str) -> str:
         """Run the claim approval tool."""
         try:
-            # Validate inputs
             if treatment_type not in self.label_encoders['treatment_type'].classes_:
                 return f"Error: Unknown treatment type '{treatment_type}'. Valid types: {list(self.label_encoders['treatment_type'].classes_)}"
             
@@ -211,19 +210,15 @@ class ClaimApprovalTool:
             if insurance_type not in self.label_encoders['insurance_type'].classes_:
                 return f"Error: Unknown insurance type '{insurance_type}'. Valid types: {list(self.label_encoders['insurance_type'].classes_)}"
             
-            # Prepare features
             features = self._prepare_features(
                 patient_name, treatment_type, cost, diagnosis, age, insurance_type
             )
             
-            # Scale features
             features_scaled = self.scaler.transform(features)
             
-            # Make prediction
             prediction = self.model.predict(features_scaled)[0]
             probability = self.model.predict_proba(features_scaled)[0]
             
-            # Format response
             result = {
                 "patient_name": patient_name,
                 "treatment_type": treatment_type,

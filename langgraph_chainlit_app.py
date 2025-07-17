@@ -9,9 +9,14 @@ import time
 import logging
 from typing import Dict, Any
 from dotenv import load_dotenv
+from colorama import init, Fore, Style
 
 import chainlit as cl
+from galileo import GalileoLogger
 from langgraph_agent import MedicalAgent
+
+# Initialize colorama for cross-platform colored output
+init()
 
 # Configure logging to suppress OpenAI HTTP requests
 logging.getLogger("openai").setLevel(logging.WARNING)
@@ -20,6 +25,29 @@ logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 # Load environment variables
 load_dotenv()
+
+# Initialize Galileo logger once at module level
+galileo_logger = None
+galileo_project = None
+galileo_log_stream = None
+
+# Initialize Galileo logger if configuration is available
+api_key = os.getenv("GALILEO_API_KEY")
+project = os.getenv("GALILEO_PROJECT")
+log_stream = os.getenv("GALILEO_LOG_STREAM")
+
+print(f"Chainlit App - Galileo Configuration:")
+print(f"  API Key: {'Set' if api_key else 'Not set'}")
+print(f"  Project: {project}")
+print(f"  Log Stream: {log_stream}")
+
+if all([api_key, project, log_stream]):
+    galileo_project = project
+    galileo_log_stream = log_stream
+    galileo_logger = GalileoLogger(project=project, log_stream=log_stream)
+    print(Fore.GREEN + "Chainlit App - Galileo logger initialized successfully." + Style.RESET_ALL)
+else:
+    print("Warning: Chainlit App - Missing Galileo configuration. Logging will be disabled.")
 
 # Initialize the medical agent
 agent = None
@@ -30,7 +58,7 @@ async def on_chat_start():
     global agent
     
     await cl.Message(
-        content="🔄 Initializing Medical Agent... This may take a moment."
+        content="Initializing..."
     ).send()
     
     try:
@@ -38,11 +66,7 @@ async def on_chat_start():
         agent = MedicalAgent()
         
         await cl.Message(
-            content="✅ Medical Agent initialized successfully! I'm ready to help you with:\n\n"
-                   "• Medical questions about symptoms, medications, and treatments\n"
-                   "• Insurance claim approvals and coverage questions\n"
-                   "• Both medical and insurance questions\n\n"
-                   "Just ask me anything!"
+            content="Sam here, your healthcare agent! See what I can do?"
         ).send()
         
         # Add action buttons after agent is initialized
@@ -66,7 +90,6 @@ async def on_message(message: cl.Message):
         return
     
     user_query = message.content
-    start_time = time.time()
     
     try:
         # Process the query through the LangGraph agent
@@ -107,12 +130,11 @@ async def on_message(message: cl.Message):
         
         # If there's an error, log it
         if result.get("error"):
-            print(f"Error in processing: {result['error']}")
+            print(Fore.RED + f"Error in processing: {result['error']}" + Style.RESET_ALL)
         
     except Exception as e:
-        error_msg = f"I apologize, but I encountered an error while processing your request: {str(e)}"
-        await cl.Message(content=error_msg).send()
-        print(f"Error in message processing: {e}")
+        await cl.Message(content=f"I apologize, but I encountered an error while processing your request: {str(e)}").send()
+        print(Fore.RED + f"Error in message processing: {e}" + Style.RESET_ALL)
 
 @cl.on_chat_end
 async def on_chat_end():
@@ -168,12 +190,12 @@ Try asking any of these or your own questions!"""
 async def add_action_buttons():
     """Add action buttons to the chat interface."""
     actions = [
-        cl.Action(name="show_tools", label="🔧 Show Tools", description="View available tools", payload={"action": "show_tools"}),
-        cl.Action(name="show_examples", label="📝 Show Examples", description="View example queries", payload={"action": "show_examples"})
+        cl.Action(name="show_tools", label="Show Tools", description="View tools", payload={"action": "show_tools"}),
+        cl.Action(name="show_examples", label="Show Examples", description="View example queries", payload={"action": "show_examples"})
     ]
     
     await cl.Message(
-        content="Use the buttons below to explore the available tools and see example queries!",
+        content="",
         actions=actions
     ).send()
 

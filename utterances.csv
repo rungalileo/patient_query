@@ -1,0 +1,20 @@
+text,induce_prior_auth_error
+what is Atin Sanyal's medical history?,false
+I'm Atin Sanyal. I have a fever, can i take an Ibuprofen?,false
+What are Sarah Johnson's allergies?,false
+Tell me about Sarah Johnson's asthma condition.,false
+Will insurance cover Sarah Johnson's migraine medication?,false
+What medication should Sarah Johnson take for her headache and will it be covered by insurance?,true
+Tell me about Sarah Johnson's condition and if her treatment will be approved,false 
+Do a prior authorization for Michael Chen's heart disease medication,false
+I am Emily Rodriguez. I have a fever, can i take an Aspirin?,false
+What medication should Emily Rodriguez take for her headache and will it be covered by insurance?,true
+Tell me about Emily Rodriguez's condition and if her treatment will be approved,false
+Do a prior authorization for Emily Rodriguez's heart disease medication,false
+I am Michael Chen. I have a fever, can i take an Aspirin?,false
+What medication should Michael Chen take for his headache and will it be covered by insurance?,true
+Tell me about Michael Chen's condition and if his treatment will be approved,false
+Do a prior authorization for Michael Chen's heart disease medication,false
+I am Michael Chen. I have a fever, can i take an Aspirin?,false
+What medication should Michael Chen take for his headache and will it be covered by insurance?,true
+Tell me about Michael Chen's condition and if his treatment will be approved,false
