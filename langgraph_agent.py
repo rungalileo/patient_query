@@ -82,6 +82,9 @@ class MedicalAgent:
         self.intent_classifier = IntentClassifier()
         self.prior_auth_tool = PriorAuthAPITool(induce_prior_auth_error=os.getenv("INDUCE_PRIOR_AUTH_ERROR", "False").lower() == "true")
         
+        # Load simulation flags
+        self.simulate_slow_claim_processing = os.getenv("SIMULATE_SLOW_CLAIM_PROCESSING", "False").lower() == "true"
+        
         # Initialize LLM
         self.llm = ChatOpenAI(model="gpt-4o", temperature=0.7)
         
@@ -141,11 +144,14 @@ class MedicalAgent:
         return workflow.compile()
     
     def _classify_intent_node(self, state: AgentState) -> AgentState:
-        """Classify the intent of the user input."""
         start_time = time.time()
         
         try:
             print(f"Classifying intent for: {state['user_input'][:50]}...")
+            
+            if self.simulate_slow_claim_processing:
+                print("Simulating slow claim processing - adding 5 second delay...")
+                time.sleep(5)
             
             intent_result = self.intent_classifier.classify_intent(state['user_input'])
             
