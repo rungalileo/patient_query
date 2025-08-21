@@ -59,6 +59,37 @@ chainlit run patient_chatbot.py
 
 The chatbot will automatically load patient data and create embeddings on startup. The chatbot will be available at `http://localhost:8000`
 
+### Step 2: Run the Healthcare Agent (Terminal Interface)
+
+For a command-line interface with advanced agent capabilities, run the healthcare agent:
+
+```bash
+python healthcare_agent.py
+```
+
+**Optional Arguments:**
+- `--project PROJECT_NAME`: Override the Galileo project name for logging
+- `--logstream LOGSTREAM_NAME`: Override the Galileo logstream name for logging
+
+**Example with custom logging:**
+```bash
+python healthcare_agent.py --project "my-healthcare-project" --logstream "agent-testing"
+```
+
+**Features of the Healthcare Agent:**
+- **Interactive Terminal Interface**: Chat directly in your terminal
+- **Advanced Workflow**: Uses LangGraph for intelligent request routing
+- **Multi-Tool Integration**: Combines RAG, claim approval, and prior authorization
+- **Intent Classification**: Automatically determines what type of help you need
+- **Galileo Logging**: Optional integration for monitoring and analytics
+
+**Available Commands:**
+- Type your medical question or insurance claim request
+- Type `tools` to see available capabilities
+- Type `quit` to exit
+
+The healthcare agent provides the same medical advice and safety features as the web chatbot, but with additional insurance processing capabilities and a streamlined terminal experience.
+
 ## Usage
 
 1. **Open the chatbot** in your browser
@@ -69,18 +100,30 @@ The chatbot will automatically load patient data and create embeddings on startu
 
 ### Example Queries
 
+**For the Web Chatbot:**
 - "I am Atin Sanyal. I'm having a runny nose, should I take aspirin?"
 - "I'm Sarah Johnson and I have a headache. Can I take ibuprofen?"
 - "I'm Michael Chen. I have chest pain, what should I do?"
+
+**For the Healthcare Agent (Terminal):**
+- "I am Atin Sanyal. I need approval for a $15,000 heart surgery due to heart disease."
+- "Sarah Johnson needs medication coverage for asthma treatment costing $500."
+- "Can you check if Michael Chen's imaging procedure requires prior authorization?"
+- "I'm Emily Rodriguez. I have depression symptoms and need therapy coverage."
 
 ## Project Structure
 
 ```
 patient-query/
-├── patient_chatbot.py          # Main Chainlit application
+├── patient_chatbot.py          # Main Chainlit web application
+├── healthcare_agent.py         # LangGraph agent with terminal interface
 ├── patient_data_processor.py   # Data processor with embeddings and similarity search
 ├── mock_patient_data.py        # Mock patient records and medical data
-├── pdf_reader.py               # Reference PDF processing utility
+├── rag_tool.py                 # RAG tool for medical information retrieval
+├── claim_approval_tool.py      # Insurance claim processing tool
+├── intent_classifier.py        # Intent classification for routing requests
+├── prior_auth_api_tool.py      # Prior authorization processing tool
+├── instructions.py             # FDA-compliant response templates
 ├── requirements.txt            # Python dependencies
 ├── chainlit.md                 # Chainlit UI configuration
 ├── env_template.txt            # Environment variables template
