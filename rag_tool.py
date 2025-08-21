@@ -35,24 +35,28 @@ galileo_logger = None
 galileo_project = None
 galileo_log_stream = None
 
-# Initialize Galileo logger if configuration is available
-api_key = os.getenv("GALILEO_API_KEY")
-project = os.getenv("GALILEO_PROJECT")
-log_stream = os.getenv("GALILEO_LOG_STREAM")
+def initialize_rag_galileo(project_name=None, logstream_name=None):
+    """Initialize Galileo logger for RAG tool with optional project name and logstream override."""
+    global galileo_logger, galileo_project, galileo_log_stream
+    
+    # Initialize Galileo logger if configuration is available
+    api_key = os.getenv("GALILEO_API_KEY")
+    project = project_name or os.getenv("GALILEO_PROJECT")
+    log_stream = logstream_name or os.getenv("GALILEO_LOG_STREAM")
 
-print(f"RAG Tool - Galileo Configuration:")
-print(f"  API Key: {'Set' if api_key else 'Not set'}")
-print(f"  Project: {project}")
-print(f"  Log Stream: {log_stream}")
+    print(f"RAG Tool - Galileo Configuration:")
+    print(f"  API Key: {'Set' if api_key else 'Not set'}")
+    print(f"  Project: {project}")
+    print(f"  Log Stream: {log_stream}")
 
-if all([api_key, project, log_stream]):
-    galileo_project = project
-    galileo_log_stream = log_stream
-    galileo_logger = GalileoLogger(project=project, log_stream=log_stream)
-    print(Fore.GREEN + "RAG Tool - Galileo logger initialized successfully." + Style.RESET_ALL)
-else:
-    print("Warning: RAG Tool - Missing Galileo configuration. Logging will be disabled.")
-
+    if all([api_key, project, log_stream]):
+        galileo_project = project
+        galileo_log_stream = log_stream
+        galileo_logger = GalileoLogger(project=project, log_stream=log_stream)
+        print(Fore.GREEN + "RAG Tool - Galileo logger initialized successfully." + Style.RESET_ALL)
+    else:
+        print("Warning: RAG Tool - Missing Galileo configuration. Logging will be disabled.")
+ 
 # Global in-memory cache for embeddings and documents
 _EMBEDDINGS_CACHE = {
     "documents": None,

@@ -7,6 +7,7 @@ import os
 import json
 import time
 import logging
+import argparse
 from typing import Dict, Any, List, Optional, TypedDict, Annotated
 from dotenv import load_dotenv
 from colorama import init, Fore, Style
@@ -19,7 +20,7 @@ from langgraph.graph import StateGraph, END
 from langchain_core.tools import tool
 from galileo import GalileoLogger
 
-from rag_tool import RAGTool
+from rag_tool import RAGTool, initialize_rag_galileo
 from claim_approval_tool import ClaimApprovalTool
 from intent_classifier import IntentClassifier, IntentResult
 from prior_auth_api_tool import PriorAuthAPITool
@@ -41,23 +42,43 @@ galileo_logger = None
 galileo_project = None
 galileo_log_stream = None
 
-# Initialize Galileo logger if configuration is available
-api_key = os.getenv("GALILEO_API_KEY")
-project = os.getenv("GALILEO_PROJECT")
-log_stream = os.getenv("GALILEO_LOG_STREAM")
+def initialize_galileo(project_name=None, logstream_name=None):
+    """Initialize Galileo logger with optional project name and logstream override."""
+    global galileo_logger, galileo_project, galileo_log_stream
+    
+    # Initialize Galileo logger if configuration is available
+    api_key = os.getenv("GALILEO_API_KEY")
+    project = project_name or os.getenv("GALILEO_PROJECT")
+    log_stream = logstream_name or os.getenv("GALILEO_LOG_STREAM")
 
-print(f"Galileo Configuration:")
-print(f"  API Key: {'Set' if api_key else 'Not set'}")
-print(f"  Project: {project}")
-print(f"  Log Stream: {log_stream}")
+    print(f"Galileo Configuration:")
+    print(f"  API Key: {'Set' if api_key else 'Not set'}")
+    print(f"  Project: {project}")
+    print(f"  Log Stream: {log_stream}")
 
-if all([api_key, project, log_stream]):
-    galileo_project = project
-    galileo_log_stream = log_stream
-    galileo_logger = GalileoLogger(project=project, log_stream=log_stream)
-    print(Fore.GREEN + "Galileo logger initialized successfully." + Style.RESET_ALL)
-else:
-    print("Warning: Missing Galileo configuration. Logging will be disabled.")
+    if all([api_key, project, log_stream]):
+        galileo_project = project
+        galileo_log_stream = log_stream
+        galileo_logger = GalileoLogger(project=project, log_stream=log_stream)
+        print(Fore.GREEN + "Galileo logger initialized successfully." + Style.RESET_ALL)
+    else:
+        print("Warning: Missing Galileo configuration. Logging will be disabled.")
+
+# Note: Galileo will be initialized in main() function to allow command-line overrides
+
+def display_banner():
+    """Display the welcome banner for Acme Healthcare Agent."""
+    banner = """
++============================================================================+
+|                            Acme Health Agent                               |
+|                    Your AI-Powered Healthcare Assistant                    |
+|                                                                            |
+|      * Medical Q&amp;A   * Claims Processing * Prior Authorization         |
+|                                                                            |
++============================================================================+
+"""
+    print(Fore.CYAN + banner + Style.RESET_ALL)
+
 
 # Define the state schema
 class AgentState(TypedDict):
@@ -857,12 +878,33 @@ Please try rephrasing your question or let me know what specific information you
 # Create a simple interface for testing
 def main():
     """Simple test interface for the medical agent."""
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description='Run the LangGraph Agent-Based Medical Assistant')
+    parser.add_argument('--project', type=str, help='The project name for Galileo logging (overrides GALILEO_PROJECT env var)')
+    parser.add_argument('--logstream', type=str, help='The logstream name for Galileo logging (overrides GALILEO_LOG_STREAM env var)')
+    args = parser.parse_args()
+    
+    # Initialize Galileo with project name and/or logstream from args (or fallback to env vars)
+    if args.project:
+        print(f"Using project name from command line: {args.project}")
+    if args.logstream:
+        print(f"Using logstream name from command line: {args.logstream}")
+    
+    # Always initialize Galileo (will use args or fall back to env vars)
+    initialize_galileo(args.project, args.logstream)
+    initialize_rag_galileo(args.project, args.logstream)
+    
     agent = MedicalAgent()
     
-    print("\nMedical Agent is ready!")
-    print("Type 'quit' to exit")
-    print("Type 'tools' to see available tools")
-    print("-" * 50)
+    # Display the welcome banner
+    display_banner()
+    
+    print(Fore.GREEN + "✅ System Ready!" + Style.RESET_ALL)
+    print(Fore.YELLOW + "Commands:" + Style.RESET_ALL)
+    print("  • Type your medical question or claim request")
+    print("  • Type 'quit' to exit")
+    print("  • Type 'tools' to see available tools")
+    print("=" * 80)
     
     while True:
         try:
