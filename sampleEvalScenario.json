@@ -1,0 +1,159 @@
+        {
+            "configuration_id": "acc6ba89-56eb-417f-84dc-884de5580eba",
+            "id": "VKPTe6KCFoScNKKnkC5pwLWo5OQ1Rh5bhRTNYDP6HIY3ITCqGo",
+            "name": "Update Name Order Refund",
+            "metadata": {
+                "user_type": "emoji_user",
+                "test_type": "sad_path",
+                "num_orders": 1,
+                "test_complexity": "multi_path"
+            },
+            "datapoint": {
+                "message": "hi, i would like to update my name to johnny doe 👋 and check the details and refund status for order ord789 🙏. my email is john.doe@example.com, social id is johndoe123, and phone is 555-123-4567. ✨",
+                "mocked_tool_responses": [
+                    {
+                        "tool_id": "6e595bb7-50b0-413b-aedc-3596abea1f12",
+                        "outputs": {
+                            "customer_exists": true,
+                            "customer_external_id": "cust_12345"
+                        }
+                    },
+                    {
+                        "tool_id": "ccd334e5-7023-4375-af2c-1b84be130fb9",
+                        "outputs": {
+                            "customer_first&lastname_updated": true
+                        }
+                    },
+                    {
+                        "tool_id": "ddbd3b0f-d467-443d-bb44-26c4d3aa342a",
+                        "outputs": {
+                            "order_status": "Delivered",
+                            "order_item_ids": [
+                                "item_A",
+                                "item_B"
+                            ],
+                            "order_value": 150.0,
+                            "order_discounts": 10.0,
+                            "order_details": "Items: item_A, item_B",
+                            "order_notes": "Customer requested gift wrapping"
+                        }
+                    },
+                    {
+                        "tool_id": "3b1f27a6-d213-4f90-83d0-7dacb7ef569d",
+                        "outputs": {
+                            "order_return_status": "Not Eligible",
+                            "order_refund_timeline": "N/A",
+                            "order_refund_amount": 0.0
+                        }
+                    }
+                ]
+            },
+            "metrics": {
+                "goals": [
+                    {
+                        "type": "tool",
+                        "order": 1,
+                        "value": {
+                            "tool_id": "6e595bb7-50b0-413b-aedc-3596abea1f12",
+                            "inputs": [
+                                {
+                                    "customer_email": "john.doe@example.com"
+                                },
+                                {
+                                    "customer_social_id": "johndoe123"
+                                },
+                                {
+                                    "customer_phone_number": "555-123-4567"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "type": "tool",
+                        "order": 2,
+                        "value": {
+                            "tool_id": "ccd334e5-7023-4375-af2c-1b84be130fb9",
+                            "inputs": [
+                                {
+                                    "customer_email": "john.doe@example.com"
+                                },
+                                {
+                                    "customer_external_id": "cust_12345"
+                                },
+                                {
+                                    "new_customer_first&lastname": "Johnny Doe"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "type": "tool",
+                        "order": 3,
+                        "value": {
+                            "tool_id": "ddbd3b0f-d467-443d-bb44-26c4d3aa342a",
+                            "inputs": [
+                                {
+                                    "order_id": "ORD789"
+                                },
+                                {
+                                    "customer_external_id": "cust_12345"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "type": "tool",
+                        "order": 4,
+                        "value": {
+                            "tool_id": "3b1f27a6-d213-4f90-83d0-7dacb7ef569d",
+                            "inputs": [
+                                {
+                                    "order_id": "ORD789"
+                                },
+                                {
+                                    "order_items": [
+                                        "item_A",
+                                        "item_B"
+                                    ]
+                                },
+                                {
+                                    "order_status": "Delivered"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "evaluation": [
+                    {
+                        "type": "bool",
+                        "question": "Did the agent limit its action strictly to modifying the customer's first and last name, adhering to the instruction 'Should not create new orders or perform tasks outside its scope without explicit permission'?",
+                        "answer": "true"
+                    },
+                    {
+                        "type": "bool",
+                        "question": "Did the agent provide only factual information related to the order details, avoiding any speculative comments or subjective recommendations as per the instruction 'You should not provide speculative information or make subjective recommendations'?",
+                        "answer": "true"
+                    },
+                    {
+                        "type": "bool",
+                        "question": "Did the agent limit its response to providing the order details retrieved, without adding information not directly supported by the tool's function of retrieving order details, thus adhering to the instruction 'ensure all information shared is accurate and based on available data'?",
+                        "answer": "true"
+                    },
+                    {
+                        "type": "bool",
+                        "question": "Did the agent's response about order details strictly pertain to the specific order requested by the customer, aligning with the instruction 'You should only assist with tasks related to the customer's own orders'?",
+                        "answer": "true"
+                    },
+                    {
+                        "type": "bool",
+                        "question": "Did the agent provide refund status or details strictly based on available data, adhering to the instruction 'You must not provide information or procedures not supported by the tools or customer data'?",
+                        "answer": "true"
+                    },
+                    {
+                        "type": "bool",
+                        "question": "Did the agent avoid giving subjective recommendations or comments regarding the refund status or details, adhering to the instruction 'Avoid giving subjective recommendations or comments'?",
+                        "answer": "true"
+                    }
+                ]
+            }
+        }

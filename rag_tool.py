@@ -207,9 +207,6 @@ def _initialize_embeddings_cache():
     _EMBEDDINGS_CACHE["initialized"] = True
     print("Embeddings cache initialization complete!")
 
-# Initialize the cache when the module is imported
-_initialize_embeddings_cache()
-
 class RAGQueryInput(BaseModel):
     query: str = Field(description="The medical question or query to search for")
     patient_name: Optional[str] = Field(default=None, description="Optional patient name to filter results")
@@ -222,13 +219,14 @@ class RAGTool:
         self.description = "Search patient medical records, medications, and symptoms to answer medical questions"
         self.openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         
+        # Initialize the cache if not already done
+        if not _EMBEDDINGS_CACHE["initialized"]:
+            _initialize_embeddings_cache()
+        
         # Use cached data
         self.documents = _EMBEDDINGS_CACHE["documents"]
         self.embeddings = _EMBEDDINGS_CACHE["embeddings"]
         self.index = _EMBEDDINGS_CACHE["index"]
-        
-        if not _EMBEDDINGS_CACHE["initialized"]:
-            raise RuntimeError("Embeddings cache not initialized. Please check the initialization process.")
         
         print(f"RAGTool initialized using cached embeddings ({len(self.documents)} documents)")
     

@@ -925,7 +925,7 @@ def main():
             result = agent.process_query(user_input)
             
             # Display the result
-            print(f"\nAgent: {result['final_response']}")
+            print(f"\n{Fore.GREEN}Agent: {result['final_response']}{Style.RESET_ALL}")
             
             # Show metadata if available
             if result.get("metadata"):
@@ -938,4 +938,4 @@ def main():
             print(f"\nError: {e}")
 
 if __name__ == "__main__":
-    main() 
+    main() x

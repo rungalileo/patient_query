@@ -2,14 +2,6 @@
 
 A medical assistant chatbot built with Chainlit and Langchain that provides personalized health advice based on patient records using OpenAI embeddings and in-memory similarity search.
 
-## Features
-
-- **Personalized Medical Advice**: Get recommendations based on your medical history
-- **Medication Safety Checks**: Automatic contraindication detection
-- **Symptom Analysis**: Information about common symptoms and treatments
-- **In-Memory Vector Search**: Fast retrieval using OpenAI embeddings and cosine similarity
-- **Real-time Streaming**: Interactive chat experience with streaming responses
-
 ## Demo Scenario
 
 The chatbot demonstrates how it can prevent patients from taking contraindicated medications. For example:
@@ -19,9 +11,8 @@ The chatbot demonstrates how it can prevent patients from taking contraindicated
 
 ## Prerequisites
 
-- Python 3.8+
 - OpenAI API key
-- (Optional) Galileo API key for logging
+- Galileo API key for logging
 
 ## Installation
 
@@ -45,36 +36,36 @@ The chatbot demonstrates how it can prevent patients from taking contraindicated
    Fill in your API keys:
    ```
    OPENAI_API_KEY=your_openai_api_key_here
+   GALILEO_PROJECT=xyz
+   GALILEO_LOG_STREAM=abc
+   GALILEO_API_KEY=your_galileo_key
+   GALILEO_CONSOLE_URL=your_galileo_url
    ```
 
 ## Setup Steps
 
 ### Step 1: Run the Chatbot
 
-Start the Chainlit application:
+Chainlit application:
 
 ```bash
 chainlit run patient_chatbot.py
 ```
 
-The chatbot will automatically load patient data and create embeddings on startup. The chatbot will be available at `http://localhost:8000`
+The chatbot will be available at `http://localhost:8000`
 
-### Step 2: Run the Healthcare Agent (Terminal Interface)
+### Step 2: Run the Healthcare Agent (CLI)
 
-For a command-line interface with advanced agent capabilities, run the healthcare agent:
+For a command-line, run the healthcare agent:
 
 ```bash
-python healthcare_agent.py
+python healthcare_agent.py --project PROJECT_NAME --logstream LOGSTREAM_NAME
 ```
 
 **Optional Arguments:**
-- `--project PROJECT_NAME`: Override the Galileo project name for logging
-- `--logstream LOGSTREAM_NAME`: Override the Galileo logstream name for logging
+- `--project PROJECT_NAME`: Override the Galileo project in .env
+- `--logstream LOGSTREAM_NAME`: Override the Galileo logstream name in .env
 
-**Example with custom logging:**
-```bash
-python healthcare_agent.py --project "my-healthcare-project" --logstream "agent-testing"
-```
 
 **Features of the Healthcare Agent:**
 - **Interactive Terminal Interface**: Chat directly in your terminal
@@ -83,10 +74,11 @@ python healthcare_agent.py --project "my-healthcare-project" --logstream "agent-
 - **Intent Classification**: Automatically determines what type of help you need
 - **Galileo Logging**: Optional integration for monitoring and analytics
 
-**Available Commands:**
-- Type your medical question or insurance claim request
-- Type `tools` to see available capabilities
-- Type `quit` to exit
+**Extra .env options:**
+```bash
+INDUCE_PRIOR_AUTH_ERROR=True
+SIMULATE_SLOW_CLAIM_PROCESSING=True
+```
 
 The healthcare agent provides the same medical advice and safety features as the web chatbot, but with additional insurance processing capabilities and a streamlined terminal experience.
 
@@ -105,30 +97,11 @@ The healthcare agent provides the same medical advice and safety features as the
 - "I'm Sarah Johnson and I have a headache. Can I take ibuprofen?"
 - "I'm Michael Chen. I have chest pain, what should I do?"
 
-**For the Healthcare Agent (Terminal):**
+**For the Healthcare Agent (CLI):**
 - "I am Atin Sanyal. I need approval for a $15,000 heart surgery due to heart disease."
 - "Sarah Johnson needs medication coverage for asthma treatment costing $500."
 - "Can you check if Michael Chen's imaging procedure requires prior authorization?"
 - "I'm Emily Rodriguez. I have depression symptoms and need therapy coverage."
-
-## Project Structure
-
-```
-patient-query/
-├── patient_chatbot.py          # Main Chainlit web application
-├── healthcare_agent.py         # LangGraph agent with terminal interface
-├── patient_data_processor.py   # Data processor with embeddings and similarity search
-├── mock_patient_data.py        # Mock patient records and medical data
-├── rag_tool.py                 # RAG tool for medical information retrieval
-├── claim_approval_tool.py      # Insurance claim processing tool
-├── intent_classifier.py        # Intent classification for routing requests
-├── prior_auth_api_tool.py      # Prior authorization processing tool
-├── instructions.py             # FDA-compliant response templates
-├── requirements.txt            # Python dependencies
-├── chainlit.md                 # Chainlit UI configuration
-├── env_template.txt            # Environment variables template
-└── README.md                   # This file
-```
 
 ## Mock Data
 
