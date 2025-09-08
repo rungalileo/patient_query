@@ -1,9 +1,12 @@
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from galileo import Message, MessageRole
 from galileo.prompts import create_prompt
 
-load_dotenv()
+# 1) load global/shared first
+load_dotenv(os.path.expanduser("~/.config/secrets/myapps.env"), override=False)
+# 2) then load per-app .env (if present) to override selectively
+load_dotenv(find_dotenv(usecwd=True), override=True)
 
 project_name = os.getenv("GALILEO_PROJECT")
 unique_prompt_name = "test_prompt_2"

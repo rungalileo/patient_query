@@ -8,7 +8,7 @@ import json
 import time
 import logging
 from typing import Dict, Any
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from colorama import init, Fore, Style
 
 import chainlit as cl
@@ -24,7 +24,10 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 # Load environment variables
-load_dotenv()
+# 1) load global/shared first
+load_dotenv(os.path.expanduser("~/.config/secrets/myapps.env"), override=False)
+# 2) then load per-app .env (if present) to override selectively
+load_dotenv(find_dotenv(usecwd=True), override=True)
 
 # Initialize Galileo logger once at module level
 galileo_logger = None

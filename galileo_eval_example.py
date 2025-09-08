@@ -10,14 +10,17 @@ import json
 import time
 from datetime import datetime
 from typing import Dict, Any, List
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
 # Import Galileo logger and healthcare agent components
 from galileo import GalileoLogger
 from healthcare_agent import MedicalAgent, initialize_galileo
 
 # Load environment variables
-load_dotenv()
+# 1) load global/shared first
+load_dotenv(os.path.expanduser("~/.config/secrets/myapps.env"), override=False)
+# 2) then load per-app .env (if present) to override selectively
+load_dotenv(find_dotenv(usecwd=True), override=True)
 
 class GalileoEvalRunner:
     """
