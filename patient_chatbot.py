@@ -277,6 +277,23 @@ def check_contraindications(patient_info: str, medication_info: str, glog=None) 
 @cl.on_chat_start
 async def on_chat_start():
     """Initialize the chat session."""
+    # Initialize guardrails setting in user session
+    cl.user_session.set("guardrails_enabled", protect_enabled)
+    
+    # Create settings UI
+    settings = None
+    if protect_enabled:
+        settings = await cl.ChatSettings(
+            [
+                cl.input_widget.Switch(
+                    id="guardrails_enabled",
+                    label="Guardrails Protection",
+                    initial=True,
+                    description="Enable Galileo Protect guardrails for input/output safety checks"
+                )
+            ]
+        ).send()
+    
     await cl.Message(
         content="🔄 Loading patient data and creating embeddings... This may take a moment."
     ).send()
@@ -284,14 +301,31 @@ async def on_chat_start():
     try:
         # Load all documents and create embeddings
         patient_processor.load_all_documents()
+        
+        guardrails_status = "🛡️ Guardrails are ENABLED" if protect_enabled else ""
+        if protect_enabled:
+            guardrails_status += " (you can toggle them in Settings ⚙️)"
+        
         await cl.Message(
-            content="✅ Patient data loaded successfully! I'm ready to help you with your health questions."
+            content=f"✅ Patient data loaded successfully! I'm ready to help you with your health questions.\n\n{guardrails_status}"
         ).send()
     except Exception as e:
         await cl.Message(
             content=f"❌ Error loading patient data: {str(e)}"
         ).send()
         return
+
+@cl.on_settings_update
+async def on_settings_update(settings):
+    """Handle settings updates from the user."""
+    guardrails_enabled = settings.get("guardrails_enabled", protect_enabled)
+    cl.user_session.set("guardrails_enabled", guardrails_enabled)
+    
+    status = "ENABLED ✅" if guardrails_enabled else "DISABLED ❌"
+    print(Fore.CYAN + f"Guardrails protection {status}" + Style.RESET_ALL)
+    await cl.Message(
+        content=f"🛡️ Guardrails protection is now **{status}**"
+    ).send()
 
 @cl.on_message
 async def on_message(message: cl.Message):
@@ -309,8 +343,11 @@ async def on_message(message: cl.Message):
             )
             print(f"Galileo trace started successfully")
 
+        # Get user's guardrails preference from session
+        guardrails_enabled = cl.user_session.get("guardrails_enabled", protect_enabled)
+
         # Apply input protection guardrails
-        if protect_enabled:
+        if protect_enabled and guardrails_enabled:
             try:
                 print(Fore.CYAN + "🛡️  Checking input..." + Style.RESET_ALL)
                 payload = Payload(input=user_query)
@@ -459,7 +496,7 @@ async def on_message(message: cl.Message):
         
         # Apply output protection guardrails
         final_response = response
-        if protect_enabled:
+        if protect_enabled and guardrails_enabled:
             try:
                 print(Fore.CYAN + "🛡️  Checking output..." + Style.RESET_ALL)
                 output_payload = Payload(input=user_query, output=response)
