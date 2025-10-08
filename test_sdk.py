@@ -1,5 +1,5 @@
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from galileo import GalileoLogger
 from galileo.datasets import get_dataset
 from galileo.experiments import run_experiment
@@ -15,7 +15,10 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Load environment variables
-load_dotenv()
+# 1) load global/shared first
+load_dotenv(os.path.expanduser("~/.config/secrets/myapps.env"), override=False)
+# 2) then load per-app .env (if present) to override selectively
+load_dotenv(find_dotenv(usecwd=True), override=True)
 
 def get_galileo_project():
     """Get the current Galileo project name."""

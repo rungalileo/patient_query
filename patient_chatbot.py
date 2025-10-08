@@ -7,7 +7,7 @@ based on their medical history using OpenAI embeddings and in-memory similarity 
 import os
 import time
 from typing import cast, List, Dict, Any
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from colorama import init, Fore, Back, Style
 
 import chainlit as cl
@@ -17,19 +17,23 @@ from langchain.schema import StrOutputParser
 from langchain.schema.runnable import Runnable
 from langchain.schema.runnable.config import RunnableConfig
 from patient_data_processor import patient_processor
-from galileo import GalileoLogger
-from galileo_core.schemas.shared.document import Document
+from galileo import GalileoLogger, GalileoScorers
+from galileo_protect import ainvoke, Rule, RuleOperator, Ruleset, Payload, OverrideAction
 
 # Initialize colorama for cross-platform colored output
 init()
 
 # Load environment variables
-load_dotenv()
+# 1) load global/shared first
+load_dotenv(os.path.expanduser("~/.config/secrets/myapps.env"), override=False)
+# 2) then load per-app .env (if present) to override selectively
+load_dotenv(find_dotenv(usecwd=True), override=True)
 
 # Initialize Galileo logger once at module level
 galileo_logger = None
 galileo_project = None
 galileo_log_stream = None
+protect_enabled = False
 
 # Initialize Galileo logger if configuration is available
 api_key = os.getenv("GALILEO_API_KEY")
@@ -46,8 +50,52 @@ if all([api_key, project, log_stream]):
     galileo_log_stream = log_stream
     galileo_logger = GalileoLogger(project=project, log_stream=log_stream)
     print(Fore.GREEN + "Galileo logger initialized successfully." + Style.RESET_ALL)
+    
+    # Initialize Galileo Protect rulesets (using non-Luna metrics for free tier)
+    try:
+        # Create input protection rulesets
+        input_rulesets = [
+            Ruleset(
+                rules=[Rule(metric=GalileoScorers.prompt_injection, operator=RuleOperator.any, target_value=["impersonation", "obfuscation"])],
+                action=OverrideAction(choices=["I detected an unusual request. Please ask a legitimate medical question."])
+            ),
+            Ruleset(
+                rules=[Rule(metric=GalileoScorers.input_toxicity, operator=RuleOperator.gt, target_value=0.5)],
+                action=OverrideAction(choices=["Please rephrase your question in a respectful manner."])
+            ),
+            Ruleset(
+                rules=[Rule(metric=GalileoScorers.input_pii, operator=RuleOperator.any, target_value=["ssn", "credit card", "name", "address", "phone number", "email", "social security number", "credit card number", "bank account number", "routing number", "driver's license number", "passport number", "social security number", "credit card number", "bank account number", "routing number", "driver's license number", "passport number"])],
+                action=OverrideAction(choices=["Please avoid sharing sensitive personal information."])
+            )
+        ]
+        
+        # Create output protection rulesets
+        output_rulesets = [
+            Ruleset(
+                rules=[Rule(metric=GalileoScorers.output_pii, operator=RuleOperator.any, target_value=["ssn", "credit card", "name", "address", "phone number", "email", "social security number", "credit card number", "bank account number", "routing number", "driver's license number", "passport number", "social security number", "credit card number", "bank account number", "routing number", "driver's license number", "passport number"])],
+                action=OverrideAction(choices=["I apologize, but I cannot share that information. Please consult your healthcare provider."])
+            ),
+            Ruleset(
+                rules=[Rule(metric=GalileoScorers.output_toxicity, operator=RuleOperator.gt, target_value=0.5)],
+                action=OverrideAction(choices=["I apologize, but I cannot provide that information. Please consult a healthcare professional."])
+            )
+        ]
+        
+        # Store rulesets for local stage usage
+        globals()['input_rulesets'] = input_rulesets
+        globals()['output_rulesets'] = output_rulesets
+        
+        protect_enabled = True
+        print(Fore.GREEN + "Galileo Protect guardrails initialized successfully." + Style.RESET_ALL)
+        print(f"  Input Protection: Prompt Injection, Toxicity, PII")
+        print(f"  Output Protection: PII, Toxicity")
+        
+    except Exception as e:
+        print(Fore.YELLOW + f"Warning: Could not initialize Galileo Protect: {e}" + Style.RESET_ALL)
+        print("Protect guardrails will be disabled.")
+        protect_enabled = False
 else:
-    print("Warning: Missing Galileo configuration. Logging will be disabled.")
+    print("Warning: Missing Galileo configuration. Logging and protection will be disabled.")
 
 def extract_patient_name(query: str) -> str:
     """Extract patient name from query using OpenAI."""
@@ -229,6 +277,23 @@ def check_contraindications(patient_info: str, medication_info: str, glog=None) 
 @cl.on_chat_start
 async def on_chat_start():
     """Initialize the chat session."""
+    # Initialize guardrails setting in user session
+    cl.user_session.set("guardrails_enabled", protect_enabled)
+    
+    # Create settings UI
+    settings = None
+    if protect_enabled:
+        settings = await cl.ChatSettings(
+            [
+                cl.input_widget.Switch(
+                    id="guardrails_enabled",
+                    label="Guardrails Protection",
+                    initial=True,
+                    description="Enable Galileo Protect guardrails for input/output safety checks"
+                )
+            ]
+        ).send()
+    
     await cl.Message(
         content="🔄 Loading patient data and creating embeddings... This may take a moment."
     ).send()
@@ -236,14 +301,31 @@ async def on_chat_start():
     try:
         # Load all documents and create embeddings
         patient_processor.load_all_documents()
+        
+        guardrails_status = "🛡️ Guardrails are ENABLED" if protect_enabled else ""
+        if protect_enabled:
+            guardrails_status += " (you can toggle them in Settings ⚙️)"
+        
         await cl.Message(
-            content="✅ Patient data loaded successfully! I'm ready to help you with your health questions."
+            content=f"✅ Patient data loaded successfully! I'm ready to help you with your health questions.\n\n{guardrails_status}"
         ).send()
     except Exception as e:
         await cl.Message(
             content=f"❌ Error loading patient data: {str(e)}"
         ).send()
         return
+
+@cl.on_settings_update
+async def on_settings_update(settings):
+    """Handle settings updates from the user."""
+    guardrails_enabled = settings.get("guardrails_enabled", protect_enabled)
+    cl.user_session.set("guardrails_enabled", guardrails_enabled)
+    
+    status = "ENABLED ✅" if guardrails_enabled else "DISABLED ❌"
+    print(Fore.CYAN + f"Guardrails protection {status}" + Style.RESET_ALL)
+    await cl.Message(
+        content=f"🛡️ Guardrails protection is now **{status}**"
+    ).send()
 
 @cl.on_message
 async def on_message(message: cl.Message):
@@ -260,6 +342,43 @@ async def on_message(message: cl.Message):
                 tags=["patient"]
             )
             print(f"Galileo trace started successfully")
+
+        # Get user's guardrails preference from session
+        guardrails_enabled = cl.user_session.get("guardrails_enabled", protect_enabled)
+
+        # Apply input protection guardrails
+        if protect_enabled and guardrails_enabled:
+            try:
+                print(Fore.CYAN + "🛡️  Checking input..." + Style.RESET_ALL)
+                payload = Payload(input=user_query)
+                protect_response = await ainvoke(
+                    payload=payload,
+                    prioritized_rulesets=input_rulesets,
+                    project_name=galileo_project,
+                    stage_name="local_input_protection"
+                )
+                
+                # Debug: print the full response
+                print(f"DEBUG: Protect response status: {protect_response.status if protect_response else 'None'}")
+                print(f"DEBUG: Protect response text: {protect_response.text if protect_response else 'None'}")
+                if protect_response:
+                    print(f"DEBUG: Protect response trace_metadata: {protect_response.trace_metadata}")
+                
+                if protect_response and protect_response.status == "triggered":
+                    # Use the text from the response (from OverrideAction choices)
+                    safe_msg = protect_response.text or "Please rephrase your question."
+                    
+                    print(Fore.YELLOW + f"⚠️  Input blocked: {safe_msg}" + Style.RESET_ALL)
+                    await cl.Message(content=f"🛡️ {safe_msg}").send()
+                    
+                    if galileo_logger:
+                        galileo_logger.conclude(output=safe_msg, duration_ns=int((time.time() - start_time) * 1000000), status_code=200)
+                        galileo_logger.flush()
+                    return
+                    
+                print(Fore.GREEN + f"✅ Input passed (status: {protect_response.status if protect_response else 'None'})" + Style.RESET_ALL)
+            except Exception as e:
+                print(Fore.YELLOW + f"Warning: Input protection check failed: {e}" + Style.RESET_ALL)
 
         patient_name = extract_patient_name(user_query)
         print(Fore.MAGENTA + f"Patient name extracted from query: {patient_name}" + Style.RESET_ALL)
@@ -375,12 +494,34 @@ async def on_message(message: cl.Message):
             if contraindication_analysis:
                 response += f"\n\n**Important Safety Check:**\n{contraindication_analysis}"
         
-        await cl.Message(content=response).send()
+        # Apply output protection guardrails
+        final_response = response
+        if protect_enabled and guardrails_enabled:
+            try:
+                print(Fore.CYAN + "🛡️  Checking output..." + Style.RESET_ALL)
+                output_payload = Payload(input=user_query, output=response)
+                protect_resp = await ainvoke(
+                    payload=output_payload,
+                    prioritized_rulesets=output_rulesets,
+                    project_name=galileo_project,
+                    stage_name="local_output_protection"
+                )
+                
+                if protect_resp and protect_resp.status == "triggered":
+                    # Use the text from the response (from OverrideAction choices)
+                    final_response = protect_resp.text or "I apologize, please consult a healthcare professional."
+                    print(Fore.YELLOW + f"⚠️  Output modified for safety" + Style.RESET_ALL)
+                else:
+                    print(Fore.GREEN + "✅ Output passed" + Style.RESET_ALL)
+            except Exception as e:
+                print(Fore.YELLOW + f"Warning: Output protection check failed: {e}" + Style.RESET_ALL)
+        
+        await cl.Message(content=final_response).send()
         
         if galileo_logger:
             print(f"Concluding Galileo trace...")
             galileo_logger.conclude(
-                output=response,
+                output=final_response,
                 duration_ns=int((time.time() - start_time) * 1000000),
                 status_code=200
             )
