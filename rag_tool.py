@@ -10,7 +10,7 @@ import faiss
 import logging
 import time
 from typing import List, Dict, Any, Optional
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from openai import OpenAI
 from langchain.tools import BaseTool
 from langchain.schema import BaseRetriever, Document
@@ -28,7 +28,10 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 # Load environment variables
-load_dotenv()
+# 1) load global/shared first
+load_dotenv(os.path.expanduser("~/.config/secrets/myapps.env"), override=False)
+# 2) then load per-app .env (if present) to override selectively
+load_dotenv(find_dotenv(usecwd=True), override=True)
 
 # Initialize Galileo logger once at module level
 galileo_logger = None

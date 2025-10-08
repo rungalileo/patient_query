@@ -3,11 +3,14 @@ Test script for the patient data processor to verify similarity search functiona
 """
 
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from patient_data_processor import patient_processor
 
 # Load environment variables
-load_dotenv()
+# 1) load global/shared first
+load_dotenv(os.path.expanduser("~/.config/secrets/myapps.env"), override=False)
+# 2) then load per-app .env (if present) to override selectively
+load_dotenv(find_dotenv(usecwd=True), override=True)
 
 def test_patient_processor():
     """Test the patient data processor functionality."""

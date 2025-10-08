@@ -10,7 +10,7 @@ import time
 import asyncio
 import logging
 from typing import Dict, Any, List
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from colorama import init, Fore, Style
 
 # Initialize colorama for cross-platform colored output
@@ -29,7 +29,10 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 # Load environment variables
-load_dotenv()
+# 1) load global/shared first
+load_dotenv(os.path.expanduser("~/.config/secrets/myapps.env"), override=False)
+# 2) then load per-app .env (if present) to override selectively
+load_dotenv(find_dotenv(usecwd=True), override=True)
 
 def get_logstream_name() -> str:
     """Prompt user for logstream name."""

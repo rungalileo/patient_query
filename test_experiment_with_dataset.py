@@ -1,7 +1,7 @@
 import os
 import sys
 import argparse
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from galileo import Message, MessageRole
 from galileo.prompts import create_prompt_template
 from galileo.experiments import run_experiment
@@ -10,7 +10,10 @@ from datetime import datetime
 from galileo.datasets import get_dataset
 import openai
 
-load_dotenv()
+# 1) load global/shared first
+load_dotenv(os.path.expanduser("~/.config/secrets/myapps.env"), override=False)
+# 2) then load per-app .env (if present) to override selectively
+load_dotenv(find_dotenv(usecwd=True), override=True)
 
 def llm_call(input):
     """LLM function that will be tested in the experiment"""

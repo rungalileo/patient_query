@@ -6,11 +6,14 @@ Demonstrates the functionality with various types of queries.
 import os
 import json
 import time
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from langgraph_agent import MedicalAgent
 
 # Load environment variables
-load_dotenv()
+# 1) load global/shared first
+load_dotenv(os.path.expanduser("~/.config/secrets/myapps.env"), override=False)
+# 2) then load per-app .env (if present) to override selectively
+load_dotenv(find_dotenv(usecwd=True), override=True)
 
 def test_medical_agent():
     """Test the medical agent with various queries."""

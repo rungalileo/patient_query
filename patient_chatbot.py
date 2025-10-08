@@ -7,7 +7,7 @@ based on their medical history using OpenAI embeddings and in-memory similarity 
 import os
 import time
 from typing import cast, List, Dict, Any
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from colorama import init, Fore, Back, Style
 
 import chainlit as cl
@@ -24,7 +24,10 @@ from galileo_core.schemas.shared.document import Document
 init()
 
 # Load environment variables
-load_dotenv()
+# 1) load global/shared first
+load_dotenv(os.path.expanduser("~/.config/secrets/myapps.env"), override=False)
+# 2) then load per-app .env (if present) to override selectively
+load_dotenv(find_dotenv(usecwd=True), override=True)
 
 # Initialize Galileo logger once at module level
 galileo_logger = None

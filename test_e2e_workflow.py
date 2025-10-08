@@ -4,7 +4,7 @@ import json
 import time
 import logging
 from typing import List, Dict, Any
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from galileo import GalileoLogger, Message, MessageRole
 from galileo.datasets import create_dataset, get_dataset
 from galileo.experiments import run_experiment
@@ -17,7 +17,10 @@ from colorama import Fore, Style
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-load_dotenv()
+# 1) load global/shared first
+load_dotenv(os.path.expanduser("~/.config/secrets/myapps.env"), override=False)
+# 2) then load per-app .env (if present) to override selectively
+load_dotenv(find_dotenv(usecwd=True), override=True)
 
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 

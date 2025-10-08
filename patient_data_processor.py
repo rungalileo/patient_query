@@ -7,13 +7,16 @@ import os
 import json
 import numpy as np
 from typing import List, Dict, Any, Tuple
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from openai import OpenAI
 from mock_patient_data import MOCK_PATIENT_RECORDS, MEDICATION_DATABASE, SYMPTOM_DATABASE
 from colorama import Fore, Style
 
 # Load environment variables
-load_dotenv()
+# 1) load global/shared first
+load_dotenv(os.path.expanduser("~/.config/secrets/myapps.env"), override=False)
+# 2) then load per-app .env (if present) to override selectively
+load_dotenv(find_dotenv(usecwd=True), override=True)
 
 # Initialize OpenAI client
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))

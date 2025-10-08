@@ -13,10 +13,13 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass
 from enum import Enum
 from pydantic import BaseModel, Field
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
 # Load environment variables
-load_dotenv()
+# 1) load global/shared first
+load_dotenv(os.path.expanduser("~/.config/secrets/myapps.env"), override=False)
+# 2) then load per-app .env (if present) to override selectively
+load_dotenv(find_dotenv(usecwd=True), override=True)
 
 class AuthStatus(str, Enum):
     REQUIRED = "required"

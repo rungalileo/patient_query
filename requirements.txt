@@ -147,5 +147,5 @@ zipp==3.23.0
 zstandard==0.23.0
 langgraph==0.2.40
 faiss-cpu==1.8.0
-scikit-learn==1.6.2
+scikit-learn==1.6.1
 pandas==2.2.3
