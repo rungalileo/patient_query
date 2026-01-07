@@ -1,13 +1,13 @@
-# Patient Query Q&A Chatbot
+# Patient Query Healthcare Agent
 
-A medical assistant chatbot built with Chainlit and Langchain that provides personalized health advice based on patient records using OpenAI embeddings and in-memory similarity search.
+A medical assistant built with LangGraph and Langchain that provides personalized health advice based on patient records using OpenAI embeddings and FAISS vector search.
 
 ## Demo Scenario
 
-The chatbot demonstrates how it can prevent patients from taking contraindicated medications. For example:
+The agent demonstrates how it can prevent patients from taking contraindicated medications. For example:
 
 - **Patient**: "I am Atin Sanyal. I'm having a runny nose, should I take aspirin?"
-- **Chatbot**: Analyzes Atin's medical history (diabetes, hypertension, allergies) and warns against aspirin due to potential interactions with his current medications (Lisinopril, Metformin)
+- **Agent**: Analyzes Atin's medical history (diabetes, hypertension, allergies) and warns against aspirin due to potential interactions with his current medications (Lisinopril, Metformin)
 
 ## Prerequisites
 
@@ -44,19 +44,9 @@ The chatbot demonstrates how it can prevent patients from taking contraindicated
 
 ## Setup Steps
 
-### Step 1: Run the Chatbot
+### Run the Healthcare Agent
 
-Chainlit application:
-
-```bash
-chainlit run patient_chatbot.py
-```
-
-The chatbot will be available at `http://localhost:8000`
-
-### Step 2: Run the Healthcare Agent (CLI)
-
-For a command-line, run the healthcare agent:
+Run the healthcare agent:
 
 ```bash
 python healthcare_agent.py --project PROJECT_NAME --logstream LOGSTREAM_NAME
@@ -80,24 +70,16 @@ INDUCE_PRIOR_AUTH_ERROR=True
 SIMULATE_SLOW_CLAIM_PROCESSING=True
 ```
 
-The healthcare agent provides the same medical advice and safety features as the web chatbot, but with additional insurance processing capabilities and a streamlined terminal experience.
+The healthcare agent provides medical advice with safety features, insurance claim processing, and prior authorization capabilities.
 
 ## Usage
 
-1. **Open the chatbot** in your browser
-2. **Wait for data loading** - you'll see a message when embeddings are ready
-3. **Introduce yourself** with your name and health concern
-4. **Ask questions** about symptoms, medications, or general health
-5. **Review the personalized advice** and any safety warnings
+1. **Run the agent** with `python healthcare_agent.py --project PROJECT --logstream LOGSTREAM`
+2. **Wait for initialization** - embeddings and models will load
+3. **Ask questions** about symptoms, medications, claims, or prior authorization
+4. **Review the personalized advice** and any safety warnings
 
 ### Example Queries
-
-**For the Web Chatbot:**
-- "I am Atin Sanyal. I'm having a runny nose, should I take aspirin?"
-- "I'm Sarah Johnson and I have a headache. Can I take ibuprofen?"
-- "I'm Michael Chen. I have chest pain, what should I do?"
-
-**For the Healthcare Agent (CLI):**
 - "I am Atin Sanyal. I need approval for a $15,000 heart surgery due to heart disease."
 - "Sarah Johnson needs medication coverage for asthma treatment costing $500."
 - "Can you check if Michael Chen's imaging procedure requires prior authorization?"
@@ -128,7 +110,6 @@ The application includes comprehensive mock data:
 3. **Similarity Search**: Uses OpenAI embeddings and cosine similarity to find relevant information
 4. **Contraindication Analysis**: Uses OpenAI to analyze potential drug interactions
 5. **Personalized Response**: Generates tailored medical advice with safety warnings
-6. **Streaming Output**: Provides real-time responses with Chainlit's streaming interface
 
 ## Architecture
 

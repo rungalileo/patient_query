@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Background Chainlit Application Runner
-Loads queries from CSV and processes them through the LangGraph agent.
+Background Agent Runner
+Loads queries from CSV and processes them through the healthcare agent.
 """
 
 import os
@@ -141,7 +141,7 @@ def save_results(results: List[Dict[str, Any]], logstream_name: str):
     
     try:
         with open(filename, 'w', encoding='utf-8') as file:
-            file.write(f"Background Chainlit Processing Results\n")
+            file.write(f"Background Agent Processing Results\n")
             file.write(f"Logstream: {logstream_name}\n")
             file.write(f"Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
             file.write(f"Total utterances: {len(results)}\n")
@@ -173,8 +173,8 @@ def save_results(results: List[Dict[str, Any]], logstream_name: str):
         logger.error(f"Error saving results: {e}")
 
 def main():
-    """Main function to run the background Chainlit application."""
-    print(f"{Fore.GREEN}Background Chainlit Application Runner{Style.RESET_ALL}")
+    """Main function to run the background agent."""
+    print(f"{Fore.GREEN}Background Agent Runner{Style.RESET_ALL}")
     print("=" * 50)
     
     # Get logstream name from user
@@ -190,10 +190,16 @@ def main():
         print(f"{Fore.RED}No utterances loaded. Exiting.{Style.RESET_ALL}")
         return
     
-    # Initialize the medical agent
+    # Initialize Galileo and the medical agent
     print(f"{Fore.CYAN}Initializing Medical Agent...{Style.RESET_ALL}")
     try:
-        from langgraph_agent import MedicalAgent
+        from healthcare_agent import MedicalAgent, initialize_galileo
+        from rag_tool import initialize_rag_galileo
+
+        project = os.getenv("GALILEO_PROJECT")
+        initialize_galileo(project, logstream_name)
+        initialize_rag_galileo(project, logstream_name)
+
         agent = MedicalAgent()
         print(f"{Fore.GREEN}Medical Agent initialized successfully!{Style.RESET_ALL}")
     except Exception as e:
